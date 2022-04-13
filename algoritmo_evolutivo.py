@@ -375,10 +375,7 @@ def mutate_child(child, n):
         elif direction == 3:
             new_queen_row += 1
         elif direction == 4:
-            new_queen_column -= 1
-
-        # VERIFICAR SI NO HAY UNA REINA EN ESA POSICION Y SI LA
-        # HAY HACER CICLO WHILE
+            new_queen_column -= 1        
 
         if mutate_board[new_queen_row][new_queen_column] == 0:
             mutate_board[new_queen_row][new_queen_column] = 1
