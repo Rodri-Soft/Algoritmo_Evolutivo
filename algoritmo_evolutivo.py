@@ -1,7 +1,6 @@
-from asyncio.windows_events import NULL
-from itertools import count
 import random
 import copy
+import operator
 
 def attack_evaluation(board, row, col, n):    
 
@@ -215,6 +214,52 @@ def generate_child(generation, best_fathers, n):
 
     return child
 
+def mutate_board(child, n):
+    mutate_board = []
+    mutate_board = switch_matrix(mutate_board, n)  
+
+    queen_number = random.randint(1, n)
+    queens_counter = 1
+    queen_row = 0
+    queen_column = 0
+    queen_found = False
+
+    # Find queen to mutate
+    for i, row in list(enumerate(child)):
+        for j, element in list(enumerate(row)):
+            
+            if child[i][j] == 1:                
+                if queens_counter == queen_number:
+                    queen_row = i
+                    queen_column = j                    
+                    queen_found = True
+                    break
+                else:
+                    queens_counter += 1
+
+        if queen_found:
+            break    
+                    
+    # Copy board
+    mutate_board = copy.deepcopy(child)  
+    mutate_board[queen_row][queen_column] = 0    
+
+    is_mutated = False
+
+    while is_mutated == False:
+        new_row = random.randint(0, n-1)
+        new_column = random.randint(0, n-1)        
+
+        if child[new_row][new_column] == 0:
+            mutate_board[new_row][new_column] = 1
+            is_mutated = True
+
+    mutation_result = []
+    if is_mutated:
+        mutation_result.append(is_mutated)
+        mutation_result.append(mutate_board)
+        return mutation_result
+           
 
 def mutate_child(child, n):
     
@@ -476,7 +521,7 @@ def run():
     solution_board = []
     solution_board = switch_matrix(solution_board, n)
 
-    while (evaluations < 1000) and (is_found == False):
+    while (evaluations < 10000) and (is_found == False):
         
         print("Evaluacion: "+str(evaluations))
         evaluations += 1
@@ -514,28 +559,53 @@ def run():
                         successful_mutacion = True
 
             else:
-                decendents_list.append(child)
+                decendents_list.append(child)                
+        
+
+        # # Order population based on their attacks to replace the worst individuals
+        # for i in range(population):
+        #     for j in range(population-1):
+                
+        #         number_of_attacks = count_attacks(generation[j], n)
+        #         auxiliary_number_of_attacks = count_attacks(generation[j+1], n)
+
+        #         if number_of_attacks > auxiliary_number_of_attacks:
+                    
+        #             auxiliary_board = []
+        #             auxiliary_board = switch_matrix(auxiliary_board, n)                              
+        #             auxiliary_board = generation[j]
+
+        #             generation[j] = generation[j+1]
+        #             generation[j+1] = auxiliary_board        
+        
+
+        boards_attacks = {}
+
+        for i in range(population):      
+            aux = []
+            aux.append(count_attacks(generation[i], n))      
+            aux.append(generation[i])      
+            boards_attacks[i] = aux
+                   
+
+        values_sort = sorted(boards_attacks.items(), key=operator.itemgetter(1), reverse=False)
+
+        list_values = []
+        for value in values_sort:
+            list_values.append(value[1])            
 
         
-        # print("Numero de descendientes: "+str(len(decendents_list)))
+        list_values_final = []
+        for value in list_values:
+            list_values_final.append(value[1])                                                  
 
-        # Order population based on their attacks to replace the worst individuals
-        for i in range(population):
-            for j in range(population-1):
-                
-                number_of_attacks = count_attacks(generation[j], n)
-                auxiliary_number_of_attacks = count_attacks(generation[j+1], n)
-
-                if number_of_attacks > auxiliary_number_of_attacks:
-                    
-                    auxiliary_board = []
-                    auxiliary_board = switch_matrix(auxiliary_board, n)                              
-                    auxiliary_board = generation[j]
-
-                    generation[j] = generation[j+1]
-                    generation[j+1] = auxiliary_board
+        generation = []
+        generation = copy.deepcopy(list_values_final)               
 
 
+
+        print("Número mínimo de ataques: "+str(count_attacks(generation[0], n)))
+        print("Número maximo de ataques: "+str(count_attacks(generation[population-1], n)))
 
         # Replace worst individuals of the board population with the created offspring
         i=99
